@@ -1,0 +1,411 @@
+(1)
+Fastapi with uvicorn
+pip install fastapi
+pip install "uvicorn[standard]"
+pip install pydantic
+pip install pymongo
+pip install jinja2
+ pip install python-multipart
+mongodb+srv://sarim:12345@cluster0.cnep27j.mongodb.net/
+mongodb://localhost:27017
+uvicorn main:app --reload
+uvicorn index:app --reload
+
+(Get)
+main.py
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+# Decorator with route @app.get("/") tells FastAPI that when GET request is made to root ("/") URL,
+# Function read_root() should be called.
+@app.get("/")
+def read_root():
+    # Function read_root returns Python dictionary {"Hello": "World"}.
+    # FastAPI automatically converts this dictionary into JSON format.
+    return {"Hello": "World"}
+
+
+# Decorator with route @app.get for handling GET requests, this time to URL in form of /items/{item_id}.
+# {item_id} in URL path is path parameter that can be used to specify which item to read.
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    # This function takes two parameters:
+    # 1. item_id (int): Path parameter that needs to be of type int. It's part of URL.
+    # 2. q (str | None = None): Optional query parameter. This means request may or may not include this parameter.
+    #    It defaults to None if not provided. Syntax str | None is type hint that indicates `q` can be string or None.
+
+    # Function returns dictionary with item_id and query parameter q.
+    # If q is not provided in request, it defaults to None.
+    return {"item_id": item_id, "q": q}
+http://127.0.0.1:8000
+http://127.0.0.1:8000/items/1
+uvicorn main:app --reload
+
+
+
+(2)
+(Fastapi templates)
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pymongo import MongoClient
+from typing import Union
+from pydantic import BaseModel
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+http://127.0.0.1:8000/static/styles.css
+Static->styles.css->CSS
+
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pymongo import MongoClient
+from typing import Union
+from pydantic import BaseModel
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_item(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+http://127.0.0.1:8000/
+Templates->index.html->This is index.html
+
+
+
+(3)
+(Notes database)
+conn = MongoClient("mongodb://localhost:27017")
+@app.get("/", response_class=HTMLResponse)
+async def read_item(request: Request):
+    docs = conn.notes.notes.find({})
+    for doc in docs:
+        print(doc)
+    print(docs)
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+
+(4)
+(Bootstrap)
+main.py
+<nav class="navbar navbar-expand-lg" style="background-color: black;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" style="color: white;">Navbar</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+             <span class="navbar-toggler-icon" style="background-color: white;"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#" style="color: white;">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style="color: white;">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                        Dropdown
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#" style="color: black;">Action</a></li>
+                        <li><a class="dropdown-item" href="#" style="color: black;">Another action</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" style="color: black;">Something else here</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true" style="color: white;">Disabled</a>
+                </li>
+            </ul>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit" style="color: white;">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+<nav class="navbar navbar-expand-lg" style="background-color: black;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" style="color: white;">iNotes</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+             <span class="navbar-toggler-icon" style="background-color: white;"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#" style="color: white;">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style="color: white;">About</a>
+                </li>
+            </ul>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit" style="color: white;">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+
+(5)
+(Form)
+    <div class="container">
+      <h1>Adding notes to database🦄</h1>
+      <form method="post">
+  <div class="mb-3">
+    <label for="title" class="form-label">Note Title:</label>
+    <input type="text" class="form-control" id="title" aria-describedby="titleHelp">
+  </div>
+  <div class="mb-3">
+    <label for="description" class="form-label">Note Description:</label>
+    <input type="text" class="form-control" id="description" aria-describedby="descriptionHelp">
+  </div>
+  <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+  </div>
+  <button type="submit" class="btn btn-warning">Submit</button>
+       </form>
+    </div>
+
+
+
+(6)
+(For loop)
+<div class="container">
+       <h2>Your Notes🍭</h2>
+    {% for item in newDocs %}
+    <div>
+        {{ item.note }}
+    </div>
+  {% endfor %}
+</div>
+
+
+
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pymongo import MongoClient
+from typing import Union
+from pydantic import BaseModel
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+conn = MongoClient("mongodb://localhost:27017")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_item(request: Request):
+    docs = conn.notes.notes.find({})
+    newDocs = []
+    for doc in docs:
+        try:
+            newDocs.append({
+                "id": doc["_id"],
+                "note": doc["note"]
+            })
+        except KeyError:
+            # Handle missing 'note' key here, for example, by skipping this document
+            pass
+    return templates.TemplateResponse("index.html", {"request": request, "newDocs": newDocs})
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+
+
+
+(7)
+(Folder structure)
+(routes/note.py)
+from fastapi import APIRouter
+from models.note import Note
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from config.db import conn
+from fastapi.templating import Jinja2Templates
+from schemas.note import noteEntity, notesEntity
+
+note = APIRouter()
+templates = Jinja2Templates(directory="templates")
+
+
+@note.get("/", response_class=HTMLResponse)
+async def read_item(request: Request):
+    docs = conn.notes.notes.find({})
+    newDocs = []
+    for doc in docs:
+        try:
+            newDocs.append({
+                "id": doc["_id"],
+                "title": doc["title"],
+                "desc": doc["desc"],
+                "important": doc["important"],
+            })
+        except KeyError:
+            # Handle missing 'note' key here, for example, by skipping this document
+            pass
+    return templates.TemplateResponse("index.html", {"request": request, "newDocs": newDocs})
+
+
+@note.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+
+
+@note.post("/")
+async def create_item(request: Request):
+    form = await request.form()
+    formDict = dict(form)
+    formDict["important"] = True if formDict.get("important") == "on" else False
+    note = conn.notes.notes.insert_one(formDict)
+    return {"Success": True}
+
+
+(index.py)
+from fastapi import FastAPI
+from routes.note import note
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.include_router(note)
+
+
+(schemas/note.py)
+def noteEntity(item) -> dict:
+    return {
+        "id": str(item["_id"]),
+        "title": item["title"],
+        "desc": item["desc"],
+        "important": item["important"],
+    }
+
+
+def notesEntity(items) -> list:
+    return [noteEntity(item) for item in items]
+
+
+(models/note.py)
+from pydantic import BaseModel
+
+
+class Note(BaseModel):
+    title: str
+    desc: str
+    important: bool = None
+
+
+(config/db.py)
+from pymongo import MongoClient
+MONGO_URI = "mongodb://localhost:27017"
+
+conn = MongoClient(MONGO_URI)
+
+
+(templates/index.html)
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>iNotes app 🌟🍔☘️🍉</title>
+  </head>
+  <body>
+    <h1>Hello sarim🌟🍔☘️🍉</h1>
+<nav class="navbar navbar-expand-lg" style="background-color: black;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" style="color: white;">iNotes</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+             <span class="navbar-toggler-icon" style="background-color: white;"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#" style="color: white;">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style="color: white;">About</a>
+                </li>
+            </ul>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit" style="color: white;">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+    <div class="container">
+      <h1>Adding notes to database🦄</h1>
+      <form action="/" method="post" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="title" id ="title" class="form-label">Note Title:</label>
+    <input type="text" class="form-control"  name="title" aria-describedby="titleHelp">
+  </div>
+  <div class="mb-3">
+    <label for="desc" id="desc" class="form-label">Note Description:</label>
+    <input type="text" class="form-control" name="desc" aria-describedby="descriptionHelp">
+  </div>
+  <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" name="important" id="exampleCheck1">
+    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+  </div>
+  <button type="submit" class="btn btn-warning">Submit</button>
+       </form>
+    </div>
+    <br>
+
+<div class="container">
+       <h2>Your Notes🍭</h2>
+    {% for item in newDocs %}
+    <div>
+       Title: {{ item.title }}<br> Has description: {{ item.desc }} <br><br>
+    </div>
+  {% endfor %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  </body>
+</html>
+
+
+(static/styles.css)
+CSS

@@ -1,0 +1,9 @@
+(1)
+username:
+sarimslayerali786
+password:
+I9EHPPD3zucmAggC
+current ip:
+58.65.223.52/32
+mongodb+srv://<username>:<password>@cluster0.cnep27j.mongodb.net/
+mongodb+srv://sarim:12345@cluster0.cnep27j.mongodb.net/
